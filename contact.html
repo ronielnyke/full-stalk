@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevVault | Payment & Contact</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #6366f1; --dark: #080c14; --gray: #111827; 
+            --text: #f8fafc; --accent: #22d3ee; --blue: #007dfe;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Fira Code', monospace; 
+            background: 
+                linear-gradient(rgba(5, 8, 15, 0.9), rgba(5, 8, 15, 0.9)), 
+                url('https://www.transparenttextures.com/patterns/carbon-fibre-big.png'),
+                url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1920&auto=format&fit=crop');
+            background-size: auto, auto, cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text); 
+            line-height: 1.6; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 900px; margin: 40px auto; padding: 20px; flex: 1; }
+        .back-link { color: var(--accent); text-decoration: none; display: inline-block; margin-bottom: 20px; font-weight: bold; }
+
+        .contact-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
+        
+        /* CARD STYLE WITH BLUR */
+        .card { 
+            background: rgba(17, 24, 39, 0.8); 
+            border: 1px solid #1f2937; 
+            border-radius: 20px; 
+            padding: 30px; 
+            backdrop-filter: blur(10px);
+        }
+        
+        /* QR CODE BOX - FITTED & LARGE */
+        .payment-card { text-align: center; border: 2px solid var(--blue); }
+        .qr-box { 
+            width: 100%;
+            max-width: 300px;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+            background: white;
+            padding: 5px; 
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 125, 254, 0.2);
+        }
+        .qr-box img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        
+        .gcash-details { 
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 125, 254, 0.1);
+            border-radius: 12px;
+        }
+        .number { font-size: 1.4rem; font-weight: 800; color: var(--blue); letter-spacing: 1px; }
+        .name { font-size: 1.1rem; font-weight: bold; color: white; }
+
+        /* CONTACT OWNER HEADER */
+        .contact-owner-header {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 10px 10px 0;
+        }
+        .contact-owner-header h3 { color: var(--primary); font-size: 1.2rem; }
+
+        /* FORM STYLE */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.8rem; color: #94a3b8; }
+        input, select, textarea { 
+            width: 100%; padding: 12px; background: rgba(8, 12, 20, 0.9); border: 1px solid #333; 
+            color: white; border-radius: 8px; outline: none; font-family: inherit;
+        }
+
+        .btn-submit { 
+            width: 100%; padding: 15px; background: var(--primary); color: white; 
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+        .btn-submit:hover { background: #4f46e5; transform: scale(1.02); box-shadow: 0 0 20px var(--primary); }
+
+        /* LOGO STYLING FOR FOOTER */
+        .footer-logo-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .logo-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 0 8px var(--primary);
+        }
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* FOOTER STYLE */
+        footer {
+            padding: 30px 20px;
+            background: rgba(5, 8, 15, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 40px;
+        }
+        .footer-content b { color: var(--primary); }
+        .dev-name { color: var(--accent); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="projects.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Projects</a>
+        
+        <header style="margin-bottom: 30px;">
+            <h1 style="color: white; text-shadow: 0 0 15px rgba(255,255,255,0.1);">Order Verification</h1>
+            <p style="color: #94a3b8;">Scan the QR code below to pay via GCash.</p>
+        </header>
+
+        <div class="contact-wrapper">
+            <div class="card payment-card">
+                <p style="margin-bottom: 15px; font-weight: bold; color: var(--blue);">GCASH QR CODE</p>
+                
+                <div class="qr-box">
+                    <img src="Gcash.jpg" alt="GCash QR Code">
+                </div>
+
+                <div class="gcash-details">
+                    <p class="number">0977 067 2201</p> 
+                    <p class="name">RU*Y P.</p>
+                </div>
+                
+                <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 15px;">
+                    <i class="fas fa-shield-alt"></i> Official Payment Channel
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="contact-owner-header">
+                    <h3><i class="fas fa-user-tie"></i> Contact Owner</h3>
+                    <p style="font-size: 0.75rem; color: #94a3b8;">For urgent concerns or custom requests.</p>
+                </div>
+
+                <form id="orderForm">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" placeholder="Enter your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" placeholder="example@gmail.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Project</label>
+                        <select required>
+                            <option value="">-- Click to Select --</option>
+                            <option>AI Inventory Bot</option>
+                            <option>Crypto Gateway Pro</option>
+                            <option>Multi-Vendor Market</option>
+                            <option>Payroll HRIS Pro</option>
+                            <option>Hospitality CRM</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>GCash Reference No. (12 Digits)</label>
+                        <input type="text" maxlength="12" placeholder="0000 111 22222" required>
+                    </div>
+                    <button type="submit" class="btn-submit">SUBMIT VERIFICATION</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo-wrap">
+                <div class="logo-circle">
+                    <img src="logo.png" alt="DevVault Logo">
+                </div>
+                <span>&copy; Copyright 2026 <b>DEVVAULT</b>.</span>
+            </div>
+            <p>All Rights Reserved.</p>
+            <p style="margin-top: 5px; font-size: 0.7rem;">Developed by: <span class="dev-name">Roniel Nyke Gonzales</span></p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('orderForm').onsubmit = function(e) {
+            e.preventDefault();
+            alert("Verification Sent! We will check your reference number and send the code to your email shortly.");
+            window.location.href = "index.html";
+        };
+    </script>
+
+</body>
+</html>

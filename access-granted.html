@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACCESS_GRANTED | TURBO</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --neon: #00ffcc; --dark: #020617; }
+        body { 
+            background: var(--dark); color: var(--neon); font-family: 'Fira Code', monospace; 
+            height: 100vh; margin: 0; display: flex; justify-content: center; 
+            align-items: center; text-align: center; overflow: hidden; cursor: pointer;
+        }
+        .ring-container { position: relative; width: 220px; height: 220px; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+        .orbital { position: absolute; border: 3px solid var(--neon); border-radius: 50%; border-top-color: transparent; animation: rotate 0.6s linear infinite; }
+        .o1 { width: 100%; height: 100%; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        #bar-container { width: 280px; height: 12px; background: rgba(255,255,255,0.1); margin: 20px auto; border-radius: 10px; border: 1px solid var(--neon); overflow: hidden; }
+        #bar { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 20px var(--neon); }
+        
+        .btn-vault { 
+            display: none; margin-top: 20px; padding: 15px 40px; color: var(--dark); 
+            background: var(--neon); text-decoration: none; font-weight: 900; 
+            border-radius: 4px; box-shadow: 0 0 25px var(--neon); text-transform: uppercase;
+        }
+        h1 { font-size: 2.2rem; letter-spacing: 5px; margin: 10px 0; }
+        .blink { animation: flash 0.4s infinite; }
+        @keyframes flash { 50% { opacity: 0.2; } }
+    </style>
+</head>
+<body onclick="startTurbo()">
+
+    <div id="setup">
+        <div class="ring-container">
+            <div class="orbital o1"></div>
+            <i class="fas fa-bolt" style="font-size: 4rem; text-shadow: 0 0 20px var(--neon);"></i>
+        </div>
+        <h1 id="status">SYSTEM_LOCKED</h1>
+        <p id="instruction" class="blink"> [ TOUCH TO INITIATE BYPASS ] </p>
+        
+        <div id="bar-container"><div id="bar"></div></div>
+        <a href="projects.html" id="link-btn" class="btn-vault">ENTER VAULT</a>
+    </div>
+
+    <script>
+        const synth = window.speechSynthesis;
+        let active = false;
+
+        // Force voice loading para ready agad
+        function loadVoices() { synth.getVoices(); }
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        function startTurbo() {
+            if (active) return;
+            active = true;
+
+            // 1. UI Updates Agad
+            document.getElementById('instruction').style.display = 'none';
+            const status = document.getElementById('status');
+            const bar = document.getElementById('bar');
+            const btn = document.getElementById('link-btn');
+
+            status.innerText = "BYPASSING...";
+            status.style.color = "#fff";
+
+            // 2. Boses (SABAY NA TATAKBO)
+            const msg = new SpeechSynthesisUtterance("Access granted. Welcome back Roniel.");
+            msg.rate = 1.3; // Mas mabilis na pagsasalita
+            synth.cancel(); 
+            synth.speak(msg);
+
+            // 3. Ultra Fast Loading (Tapos sa loob ng 1.5 seconds)
+            let progress = 0;
+            const speed = setInterval(() => {
+                progress += 5; // +5% bawat talon
+                bar.style.width = progress + "%";
+
+                if (progress >= 100) {
+                    clearInterval(speed);
+                    status.innerText = "ACCESS_GRANTED";
+                    btn.style.display = "inline-block";
+                    
+                    const finalMsg = new SpeechSynthesisUtterance("System online.");
+                    finalMsg.rate = 1.3;
+                    synth.speak(finalMsg);
+                }
+            }, 50); // Mabilis na interval
+        }
+    </script>
+</body>
+</html>

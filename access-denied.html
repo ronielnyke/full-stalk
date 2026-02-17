@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL_ERROR | Access Denied</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --red: #ff0000; --dark-red: #300000; --black: #050000; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body { 
+            background-color: var(--black); 
+            color: var(--red); 
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            text-align: center;
+        }
+
+        #canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.2; }
+
+        .denied-container {
+            padding: 40px;
+            border: 2px solid var(--red);
+            background: rgba(10, 0, 0, 0.9);
+            box-shadow: 0 0 50px var(--red);
+            max-width: 600px;
+            width: 90%;
+            z-index: 10;
+            animation: glitch 0.2s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(2px, 0); }
+            50% { transform: translate(-2px, 0); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .icon { font-size: 5rem; margin-bottom: 20px; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        h1 { font-size: 2.5rem; letter-spacing: 5px; margin-bottom: 15px; }
+        p { font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px; color: #ff8888; }
+
+        .log-terminal {
+            background: #000; padding: 15px; text-align: left;
+            font-size: 0.75rem; border-left: 3px solid var(--red);
+            margin-bottom: 20px; height: 120px; overflow: hidden;
+        }
+
+        .countdown { font-size: 1.2rem; font-weight: bold; color: white; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <canvas id="canvas"></canvas>
+
+    <audio id="siren" loop>
+        <source src="https://www.soundjay.com/buttons/beep-01a.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="denied-container">
+        <i class="fas fa-user-secret icon"></i>
+        <h1>ACCESS DENIED</h1>
+        <p>UNAUTHORIZED ACCESS ATTEMPT DETECTED.<br>SYSTEM INTERFACE HAS BEEN LOCKED.</p>
+
+        <div class="log-terminal" id="logs">
+            [SYS] Tracing IP: 192.168.1.XXX...<br>
+            [SYS] Identity: UNKNOWN_INTRUDER<br>
+            [SYS] Attempting to bypass DevVault Security...<br>
+            [SYS] EXCEPTION_CAUGHT: Unauthorized_Inspection<br>
+            [SYS] REPORT_SENT_TO_ADMIN_RONIEL...<br>
+            [SYS] ALARM_STATUS: ACTIVE
+        </div>
+
+        <div class="countdown">REDIRECTING IN <span id="timer">10</span>s</div>
+    </div>
+
+    <script>
+        // --- MATRIX RAIN ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const letters = "01010101ACCESSDENIEDBREACHERROR0101";
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ff0000";
+            ctx.font = fontSize + "px monospace";
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters.charAt(Math.floor(Math.random() * letters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+
+        // --- ALARM AND VOICE ---
+        function playAlarm() {
+            // High frequency "Beep" alarm simulation using Web Audio API (Mas effective kaysa audio tag)
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            function beep(freq, duration, vol) {
+                const oscillator = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                oscillator.connect(gain);
+                gain.connect(audioCtx.destination);
+                gain.gain.value = vol;
+                oscillator.frequency.value = freq;
+                oscillator.type = "sawtooth"; // Parang siren ang tunog
+                oscillator.start();
+                setTimeout(() => oscillator.stop(), duration);
+            }
+
+            // Paulit-ulit na beep (Siren effect)
+            setInterval(() => {
+                beep(880, 200, 0.1); // High pitch
+                setTimeout(() => beep(440, 200, 0.1), 300); // Low pitch
+            }, 600);
+        }
+
+        window.onload = () => {
+            // Play Alarm
+            playAlarm();
+
+            // AI Voice
+            const msg = new SpeechSynthesisUtterance("Access denied. Your activity is being monitored by Admin Roniel. System is locked.");
+            msg.pitch = 0.1;
+            msg.rate = 0.9;
+            window.speechSynthesis.speak(msg);
+        };
+
+        // --- COUNTDOWN REDIRECT ---
+        let count = 10;
+        const timerElement = document.getElementById('timer');
+        const countdown = setInterval(() => {
+            count--;
+            timerElement.innerText = count;
+            if (count <= 0) {
+                clearInterval(countdown);
+                window.location.href = "https://www.google.com";
+            }
+        }, 1000);
+
+        document.onkeydown = () => false;
+    </script>
+</body>
+</html>

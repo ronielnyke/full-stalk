@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevVault | Terminal Deep Scan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #6366f1; --dark: #020205; --red: #ff0000; --green: #00ff41; --cyan: #00f2ff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+        
+        body { 
+            font-family: 'Fira Code', 'Courier New', monospace; 
+            background: var(--dark); 
+            color: var(--green); 
+            height: 100vh; 
+            display: flex; justify-content: center; align-items: center; 
+            overflow: hidden; user-select: none;
+            flex-direction: column;
+        }
+
+        /* MATRIX BACKGROUND */
+        #matrix-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; opacity: 0.1; pointer-events: none;
+        }
+
+        /* CRT OVERLAY */
+        body::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 1000; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
+
+        .terminal-box {
+            width: 95%; max-width: 750px;
+            background: rgba(0, 10, 0, 0.95);
+            border: 1px solid var(--green);
+            padding: 25px;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.15);
+            position: relative;
+        }
+
+        #log-screen {
+            height: 350px; overflow-y: auto; font-size: 0.85rem; scrollbar-width: none;
+            margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 10px;
+            border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+        }
+        #log-screen::-webkit-scrollbar { display: none; }
+
+        .input-line { display: flex; align-items: center; gap: 10px; font-size: 1rem; }
+        #userInput {
+            background: transparent; border: none; color: var(--cyan);
+            font-family: inherit; width: 100%; outline: none; caret-color: var(--green);
+        }
+
+        .tag { font-weight: bold; margin-right: 5px; }
+        .success { color: var(--cyan); text-shadow: 0 0 5px var(--cyan); }
+        .danger { color: var(--red); text-shadow: 0 0 10px var(--red); }
+        .process { color: #f1fa8c; }
+
+        /* PROGRESS BAR WITH PERCENTAGE */
+        .progress-wrapper { margin: 15px 0; display: none; }
+        .progress-container { width: 100%; height: 20px; background: #111; border: 1px solid #333; position: relative; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: var(--green); box-shadow: 0 0 20px var(--green); transition: width 0.1s linear; }
+        .perc-text { position: absolute; width: 100%; text-align: center; top: 0; left: 0; font-size: 0.8rem; color: white; font-weight: bold; mix-blend-mode: difference; line-height: 18px; }
+
+        .glitch-red { animation: glitch-red 0.1s infinite; }
+        @keyframes glitch-red { 0% { border-color: var(--red); box-shadow: 0 0 50px var(--red); } 100% { border-color: #300; } }
+        
+        #attempts-ui { color: var(--red); font-weight: bold; }
+
+        /* FOOTER */
+        footer {
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: #333;
+            text-align: center;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body onclick="initSession()">
+
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="terminal-box" id="terminal">
+        <div style="font-size: 0.7rem; opacity: 0.5; margin-bottom: 10px; display: flex; justify-content: space-between;">
+            <span>DEVVAULT_SEC_SYSTEM [KERNEL_V.10.9]</span>
+            <div>
+                <span id="attempts-ui"></span> &nbsp;
+                <span id="live-clock"></span>
+            </div>
+        </div>
+        
+        <div id="log-screen">
+            <p>> [SYSTEM]: CLICK TO INITIALIZE SECURE HANDSHAKE...</p>
+        </div>
+
+        <div class="progress-wrapper" id="progCont">
+            <div class="progress-container">
+                <div class="progress-bar" id="progBar"></div>
+                <div class="perc-text" id="percText">0%</div>
+            </div>
+        </div>
+
+        <div class="input-line" id="inputLine" style="display: none;">
+            <span class="tag">ROOT@DEVVAULT:~$</span>
+            <input type="text" id="userInput" autofocus autocomplete="off" spellcheck="false">
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 <b>DEVVAULT</b>. All Rights Reserved. Developed by: Roniel Nyke Gonzales
+    </footer>
+
+    <script>
+        const logScreen = document.getElementById('log-screen');
+        const userInput = document.getElementById('userInput');
+        const progBar = document.getElementById('progBar');
+        const progCont = document.getElementById('progCont');
+        const percText = document.getElementById('percText');
+        const attemptsUI = document.getElementById('attempts-ui');
+        const ADMIN_KEY = "ronieladmin123";
+        
+        let attempts = 3; 
+        let audioCtx;
+
+        function playSound(freq, type, duration, vol=0.1) {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        const sfx = {
+            type: () => playSound(150, 'square', 0.02, 0.05),
+            confirm: () => playSound(880, 'sine', 0.1),
+            error: () => playSound(110, 'sawtooth', 0.5, 0.2),
+            process: () => playSound(Math.random() * 500 + 200, 'sine', 0.05, 0.02),
+            loading: (p) => playSound(200 + (p * 5), 'sine', 0.05, 0.03) // Pitch pataas base sa percentage
+        };
+
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const chars = "010101010101";
+        const drops = Array(Math.floor(canvas.width/20)).fill(1);
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#0F0";
+            ctx.font = "15px monospace";
+            drops.forEach((y, i) => {
+                const char = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(char, i * 20, y * 20);
+                if (y * 20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }
+        setInterval(drawMatrix, 50);
+
+        async function typeLog(text, className = "", speed = 30) {
+            const p = document.createElement('p');
+            if (className) p.className = className;
+            p.innerHTML = "> ";
+            logScreen.appendChild(p);
+            
+            for(let char of text) {
+                p.innerHTML += char;
+                sfx.type();
+                logScreen.scrollTop = logScreen.scrollHeight;
+                await new Promise(r => setTimeout(r, speed));
+            }
+        }
+
+        function speak(text, pitch = 0.6) {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 1.0; msg.pitch = pitch;
+            window.speechSynthesis.speak(msg);
+        }
+
+        async function initSession() {
+            if(audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            logScreen.innerHTML = "";
+            attemptsUI.innerText = `ATTEMPTS LEFT: ${attempts}`;
+            await typeLog("CORE SYSTEM INITIALIZED.", "success");
+            await typeLog("AWAITING ADMIN CREDENTIALS...", "process");
+            speak("System online. Please enter administrative key.");
+            document.getElementById('inputLine').style.display = 'flex';
+            userInput.focus();
+        }
+
+        userInput.addEventListener('keydown', async function(e) {
+            sfx.type();
+            if (e.key === 'Enter') {
+                const val = this.value;
+                this.value = "";
+                if (val === ADMIN_KEY) {
+                    sfx.confirm();
+                    startDeepScan();
+                } else {
+                    attempts--;
+                    attemptsUI.innerText = `ATTEMPTS LEFT: ${attempts}`;
+                    if (attempts > 0) {
+                        sfx.error();
+                        speak(`Access denied. ${attempts} attempts remaining.`, 0.5);
+                        await typeLog(`ACCESS DENIED. ATTEMPTS REMAINING: ${attempts}`, "danger", 20);
+                    } else {
+                        sfx.error();
+                        failSequence();
+                    }
+                }
+            }
+        });
+
+        const scanSteps = [
+            { m: "INITIALIZING HANDSHAKE...", d: 800, v: "Initializing handshake" },
+            { m: "BYPASSING LOCAL FIREWALL...", d: 1000, v: "Bypassing firewall" },
+            { m: "VERIFYING KERNEL INTEGRITY...", d: 1500, v: "Kernel verified" },
+            { m: "SCANNING FOR PACKET SNIFFERS...", d: 1200 , v: "Scanning for Packet Sniffers" },
+            { m: "ESTABLISHING ENCRYPTED TUNNEL...", d: 2000, v: "Tunnel established" },
+            { m: "IDENTITY MATCH: RONIEL GONZALES", d: 2500, c: "success", v: "Identity matched. Welcome back Boss Roniel" },
+            { m: "ACCESS GRANTED. REDIRECTING...", d: 800, c: "success", v: "Access granted" }
+        ];
+
+        async function updateProgress(target, duration) {
+            let start = parseInt(progBar.style.width) || 0;
+            let current = start;
+            let increment = (target - start) / (duration / 50);
+
+            return new Promise(resolve => {
+                let interval = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(interval);
+                        resolve();
+                    }
+                    progBar.style.width = current + "%";
+                    percText.innerText = Math.floor(current) + "%";
+                    sfx.loading(current); // Sound effect habang tumataas
+                }, 50);
+            });
+        }
+
+        async function startDeepScan() {
+            document.getElementById('inputLine').style.display = 'none';
+            attemptsUI.style.display = 'none';
+            progCont.style.display = 'block';
+
+            let totalSteps = scanSteps.length;
+            for (let i = 0; i < totalSteps; i++) {
+                if(scanSteps[i].v) speak(scanSteps[i].v);
+                await typeLog(scanSteps[i].m, scanSteps[i].c || "process", 20);
+                
+                let targetProgress = ((i + 1) / totalSteps) * 100;
+                await updateProgress(targetProgress, scanSteps[i].d);
+                sfx.confirm();
+            }
+
+            sessionStorage.setItem('vault_auth', 'true');
+            window.location.href = 'index.html';
+        }
+
+        async function failSequence() {
+            document.getElementById('terminal').classList.add('glitch-red');
+            document.getElementById('inputLine').style.display = 'none';
+            attemptsUI.innerText = "SYSTEM LOCKED";
+            speak("Unauthorized access. Counter measures engaged.", 0.1);
+            await typeLog("CRITICAL ERROR: INVALID KEY", "danger", 10);
+            await typeLog("MAX ATTEMPTS EXCEEDED.", "danger", 10);
+            await typeLog("INTRUSION ATTEMPT RECORDED.", "danger", 10);
+            await typeLog("INITIATING SYSTEM LOCKDOWN...", "danger", 10);
+            setTimeout(() => { window.location.href = 'access-denied.html'; }, 2500);
+        }
+
+        setInterval(() => {
+            document.getElementById('live-clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+    </script>
+</body>
+</html>

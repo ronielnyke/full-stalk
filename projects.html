@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevVault | Business Solutions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #6366f1; --dark: #080c14; --gray: #111827; 
+            --text: #f8fafc; --accent: #22d3ee; --red: #ff5555; 
+            --green: #00ff41; --orange: #ffb86c;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        @media print { body { display: none; } }
+        
+        body { 
+            font-family: 'Fira Code', monospace; 
+            background: 
+                linear-gradient(rgba(5, 8, 15, 0.9), rgba(5, 8, 15, 0.9)), 
+                url('https://www.transparenttextures.com/patterns/carbon-fibre-big.png'),
+                url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1920&auto=format&fit=crop');
+            background-size: auto, auto, cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text); 
+            padding-top: 80px; 
+            user-select: none; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .floating-back {
+            position: fixed; top: 20px; left: 20px; z-index: 2000;
+            background: rgba(99, 102, 241, 0.2); border: 1px solid var(--primary);
+            color: var(--primary); width: 45px; height: 45px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            text-decoration: none; transition: 0.3s; backdrop-filter: blur(5px);
+        }
+        .floating-back:hover { background: var(--primary); color: white; transform: translateX(-5px); }
+
+        /* Updated Nav with Logo Circle */
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 8%; position: fixed; width: 100%; top: 0; z-index: 1000; background: rgba(8, 12, 20, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        
+        .logo-wrapper { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-circle {
+            width: 35px; height: 35px; border-radius: 50%;
+            border: 2px solid var(--primary);
+            overflow: hidden;
+            box-shadow: 0 0 10px var(--primary);
+            display: flex; justify-content: center; align-items: center;
+            background: #000;
+        }
+        .logo-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+        .back-link { color: var(--accent); text-decoration: none; font-size: 0.8rem; border: 1px solid var(--accent); padding: 6px 15px; border-radius: 5px; margin-left: 20px; }
+        .logo { font-size: 1.3rem; font-weight: 800; color: white; }
+        .logo span { color: var(--primary); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; flex: 1; }
+        .search-container { width: 100%; max-width: 500px; margin: 0 auto 40px; position: relative; }
+        .search-bar { width: 100%; padding: 15px 20px; border-radius: 30px; border: 1px solid #333; background: rgba(17, 24, 39, 0.8); color: white; outline: none; backdrop-filter: blur(5px); }
+
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        
+        .project-card { 
+            background: rgba(17, 24, 39, 0.7); 
+            border-radius: 15px; 
+            border: 1px solid #1f2937; 
+            overflow: hidden; 
+            transition: 0.3s; 
+            position: relative; 
+            backdrop-filter: blur(10px);
+        }
+        .project-banner { width: 100%; height: 180px; background: #000; }
+        .project-banner img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+
+        .card-body { padding: 20px; }
+        .price-tag { color: var(--green); font-weight: bold; font-size: 1.2rem; display: block; margin-bottom: 10px; }
+
+        .btn { width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; margin-top: 10px; display: block; text-align: center; text-decoration: none; font-size: 0.85rem; }
+        .btn-buy { background: var(--primary); color: white; }
+        .btn-view { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+
+        .edit-btn-admin { 
+            position: absolute; top: 10px; right: 10px; background: var(--orange); 
+            color: #000; border: none; padding: 5px 12px; border-radius: 5px; 
+            font-weight: bold; cursor: pointer; z-index: 10; display: none;
+        }
+
+        #permission-modal, #editor-modal, #source-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 4000; display: none; justify-content: center; align-items: center; }
+        .modal-content, .editor-content { background: #0b0f1a; width: 90%; max-width: 500px; padding: 30px; border-radius: 15px; border: 1px solid var(--primary); text-align: center; }
+        
+        .source-content { background: #050505; width: 90%; max-width: 800px; height: 80vh; border-radius: 10px; border: 1px solid var(--green); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
+        .source-header { padding: 10px; background: #111; border-bottom: 1px solid #333; display: flex; justify-content: space-between; color: var(--green); font-size: 0.8rem; }
+        #codeDisplay { flex: 1; padding: 20px; color: var(--green); overflow-y: auto; text-align: left; white-space: pre-wrap; font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.5; }
+
+        input.key-input, .editor-content input, .editor-content textarea { 
+            width: 100%; padding: 12px; margin: 10px 0; background: #000; 
+            border: 1px solid #333; color: var(--green); font-family: inherit; 
+        }
+        textarea { height: 150px; resize: none; }
+        label { display: block; text-align: left; font-size: 0.7rem; color: #64748b; text-transform: uppercase; margin-top: 10px; }
+
+        footer {
+            padding: 30px 20px;
+            background: rgba(5, 8, 15, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 40px;
+        }
+        .footer-content b { color: var(--primary); }
+        .dev-name { color: var(--accent); font-weight: bold; }
+
+        #codeDisplay::after { content: "_"; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <a href="index.html" class="floating-back" title="Go Back"><i class="fas fa-arrow-left"></i></a>
+
+    <nav>
+        <div style="display:flex; align-items:center; gap:5px;">
+            <a href="security.html" class="back-link">SYSTEM LOCK</a>
+            <a href="index.html" class="logo-wrapper">
+                <div class="logo-circle">
+                    <img src="logo.png" alt="Logo">
+                </div>
+                <div class="logo">Dev<span>Vault</span></div>
+            </a>
+        </div>
+        <div id="status" style="display:none; color: var(--orange); font-weight:bold;"><i class="fas fa-crown"></i> OWNER ACCESS</div>
+    </nav>
+
+    <main class="container">
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-bar" placeholder="Search projects..." onkeyup="render()">
+        </div>
+        <div class="project-grid" id="main-grid"></div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; Copyright 2026 <b>DEVVAULT</b>. | All Rights Reserved.</p>
+            <p style="margin-top: 5px; font-size: 0.7rem;">Developed by: <span class="dev-name">Roniel Nyke Gonzales</span></p>
+        </div>
+    </footer>
+
+    <div id="permission-modal">
+        <div class="modal-content">
+            <i class="fas fa-user-shield" style="font-size: 3rem; color: var(--primary);"></i>
+            <h2 style="margin-top:15px;">OWNER PERMISSION</h2>
+            <p style="font-size: 0.8rem; color: #94a3b8;">Enter the unique Access Key provided by the owner.</p>
+            <input type="password" id="accessKey" class="key-input" placeholder="••••••••">
+            <button class="btn btn-buy" onclick="verifyAccess()">VALIDATE ACCESS</button>
+            <button onclick="closeModal()" class="btn">CANCEL</button>
+        </div>
+    </div>
+
+    <div id="editor-modal">
+        <div class="editor-content">
+            <h2 style="color:var(--orange)">📝 EDIT PROJECT & CODE</h2>
+            <label>Project Name</label><input type="text" id="editName">
+            <label>Price</label><input type="text" id="editPrice">
+            <label>Image URL</label><input type="text" id="editImage">
+            <label>Source Code</label>
+            <textarea id="editCode" placeholder="Paste your HTML/JS code here..."></textarea>
+            <button class="btn btn-buy" style="background:var(--orange); color:black" onclick="saveChanges()">SAVE CHANGES</button>
+            <button class="btn" onclick="closeEditor()">CANCEL</button>
+        </div>
+    </div>
+
+    <div id="source-modal">
+        <div class="source-content">
+            <div class="source-header">
+                <span id="sourceTitle">SOURCE_CODE.TXT</span>
+                <span style="cursor:pointer" id="closeBtn" onclick="closeSource()">[CLOSE X]</span>
+            </div>
+            <div id="codeDisplay"></div>
+        </div>
+    </div>
+
+    <script>
+        let isOwner = false;
+        let currentEditIndex = null;
+        let selectedProjectIndex = null;
+        let isTyping = false; 
+        let audioCtx = null;
+
+        const defaultProjects = [
+            { name: "AI Inventory Bot", price: "₱4,500", image: "https://images.unsplash.com/photo-1586769852836-bc069f19e1b6?q=80&w=500", code: "// Inventory Bot System V1.0\n// Status: Active" },
+            { name: "Crypto Gateway Pro", price: "₱8,000", image: "https://images.unsplash.com/photo-1550565118-3a14e8d0386f?q=80&w=500", code: "// Secure Encryption Enabled\n// Processing Transaction..." },
+            { name: "Multi-Vendor Market", price: "₱6,200", image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=500", code: "// Market API v3.4\n// Syncing vendors..." },
+            { name: "Payroll HRIS Pro", price: "₱5,500", image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=500", code: "// HR Management Online\n// Encrypted Database Connection" },
+            { name: "Hospitality CRM", price: "₱3,900", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=500", code: "// CRM Loaded\n// Tracking guest info..." }
+        ];
+
+        let projects = JSON.parse(localStorage.getItem('devvault_db')) || defaultProjects;
+
+        function saveToDB() {
+            localStorage.setItem('devvault_db', JSON.stringify(projects));
+        }
+
+        function playTypeSound() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(Math.random() * 500 + 200, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function render() {
+            const grid = document.getElementById('main-grid');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            grid.innerHTML = "";
+
+            projects.forEach((p, i) => {
+                if(p.name.toLowerCase().includes(search)) {
+                    grid.innerHTML += `
+                        <div class="project-card">
+                            <button class="edit-btn-admin" style="display: ${isOwner ? 'block' : 'none'}" onclick="openEditor(${i})">EDIT</button>
+                            <div class="project-banner"><img src="${p.image}"></div>
+                            <div class="card-body">
+                                <h3>${p.name}</h3>
+                                <span class="price-tag">${p.price}</span>
+                                <a href="contact.html" class="btn btn-buy">PURCHASE LICENSE</a>
+                                <button class="btn btn-view" onclick="askPermission(${i})">VIEW SOURCE CODE</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function askPermission(index) {
+            selectedProjectIndex = index;
+            document.getElementById('permission-modal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('permission-modal').style.display = 'none'; }
+
+        function verifyAccess() {
+            const key = document.getElementById('accessKey').value;
+            if (key === "owneradmin123") {
+                document.getElementById('permission-modal').style.display = 'none';
+                document.getElementById('accessKey').value = "";
+                startTypingEffect();
+            } else {
+                window.location.href = "access-denied.html";
+            }
+        }
+
+        async function startTypingEffect() {
+            const project = projects[selectedProjectIndex];
+            const display = document.getElementById('codeDisplay');
+            const modal = document.getElementById('source-modal');
+            const title = document.getElementById('sourceTitle');
+            
+            title.innerText = "DECRYPTING: " + project.name.toUpperCase() + ".SH";
+            display.innerText = "";
+            modal.style.display = 'flex';
+            
+            if (isTyping) return;
+            isTyping = true;
+
+            const codeText = project.code || "// No source code available in database.";
+            
+            for (let i = 0; i < codeText.length; i++) {
+                if (!isTyping) break; 
+                display.innerText += codeText[i];
+                playTypeSound();
+                display.scrollTop = display.scrollHeight;
+                await new Promise(r => setTimeout(r, Math.random() * 30 + 10));
+            }
+            isTyping = false;
+            title.innerText = "ACCESS GRANTED: " + project.name.toUpperCase();
+        }
+
+        function closeSource() {
+            isTyping = false;
+            document.getElementById('source-modal').style.display = 'none';
+            document.getElementById('codeDisplay').innerText = "";
+        }
+
+        function openEditor(index) {
+            currentEditIndex = index;
+            document.getElementById('editName').value = projects[index].name;
+            document.getElementById('editPrice').value = projects[index].price;
+            document.getElementById('editImage').value = projects[index].image;
+            document.getElementById('editCode').value = projects[index].code || "";
+            document.getElementById('editor-modal').style.display = 'flex';
+        }
+
+        function closeEditor() { document.getElementById('editor-modal').style.display = 'none'; }
+
+        function saveChanges() {
+            projects[currentEditIndex].name = document.getElementById('editName').value;
+            projects[currentEditIndex].price = document.getElementById('editPrice').value;
+            projects[currentEditIndex].image = document.getElementById('editImage').value;
+            projects[currentEditIndex].code = document.getElementById('editCode').value;
+            saveToDB();
+            alert("Database Updated: Code successfully injected.");
+            closeEditor();
+            render();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'L') { 
+                const pass = prompt("Enter Owner Admin Key:");
+                if (pass === "ronieladmin123") {
+                    isOwner = true;
+                    document.getElementById('status').style.display = 'block';
+                    alert("Admin Mode: Active");
+                    render();
+                }
+            }
+        });
+
+        render();
+    </script>
+</body>
+</html>
