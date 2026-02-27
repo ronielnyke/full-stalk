@@ -229,10 +229,9 @@
         }, 500);
     </script>
 </body>
-    <script>
-// CYBER-SENTINEL TRACKING
-// Change this to your Cyber-Sentinel URL after deployment
-const SENTINEL = 'https://Cyber-SentinelL.netlify.app/api';
+<script>
+// CYBER-SENTINEL TRACKING - Add to your website
+const SENTINEL = 'https://Cyber-Sentinel.netlify.app/api';
 
 const sid = localStorage.getItem('cs_session') || Date.now().toString(36)+Math.random().toString(36).substr(2,5);
 localStorage.setItem('cs_session', sid);
@@ -257,9 +256,9 @@ async function check(){
             <html><head><meta charset="UTF-8"><title>Access Denied</title>
             <style>body{margin:0;background:#000;color:#ff003c;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center}
             .x{max-width:500px;padding:40px}h1{font-size:48px;margin-bottom:20px}</style></head>
-            <body><div class="x"><h1>🔒 ACCESS DENIED</h1><p>${d.reason || 'Your IP has been blocked'}</p></div></body></html>`;
+            <body><div class="x"><h1>🔒 ACCESS DENIED</h1><p>${d.reason||'Your IP is blocked'}</p></div></body></html>`;
         }
-    }catch(e){console.log('Security check:', e.message)}
+    }catch(e){console.log('Sentinel:',e.message)}
 }
 
 check();
