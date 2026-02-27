@@ -229,39 +229,31 @@
         }, 500);
     </script>
 </body>
+<!-- Cyber-Sentinel Tracker -->
 <script>
-// CYBER-SENTINEL TRACKING - Add to your website
-const SENTINEL = 'https://Cyber-Sentinel.netlify.app/api';
-
-const sid = localStorage.getItem('cs_session') || Date.now().toString(36)+Math.random().toString(36).substr(2,5);
-localStorage.setItem('cs_session', sid);
-
-async function check(){
-    try{
-        const r = await fetch(SENTINEL + '/track', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                page_url: location.href,
-                user_agent: navigator.userAgent,
-                referrer: document.referrer,
-                screen: screen.width+'x'+screen.height,
-                session_id: sid
-            })
-        });
-        const d = await r.json();
-        
-        if(d.blocked){
-            document.documentElement.innerHTML = `<!DOCTYPE html>
-            <html><head><meta charset="UTF-8"><title>Access Denied</title>
-            <style>body{margin:0;background:#000;color:#ff003c;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center}
-            .x{max-width:500px;padding:40px}h1{font-size:48px;margin-bottom:20px}</style></head>
-            <body><div class="x"><h1>🔒 ACCESS DENIED</h1><p>${d.reason||'Your IP is blocked'}</p></div></body></html>`;
-        }
-    }catch(e){console.log('Sentinel:',e.message)}
-}
-
-check();
-setInterval(check, 30000);
+(function(){
+    var d=document,s=d.createElement('script');
+    s.innerHTML=`
+        fetch('https://ipapi.co/json/')
+        .then(r=>r.json())
+        .then(data=>{
+            var visitor={
+                id:Date.now().toString(36),
+                ip:data.ip,
+                timestamp:new Date().toISOString(),
+                page:location.href,
+                country:data.country_name,
+                city:data.city,
+                ua:navigator.userAgent,
+                threat:(/bot|crawler|spider/i.test(navigator.userAgent)?50:0)+(data.proxy?30:0)
+            };
+            var existing=JSON.parse(localStorage.getItem('cyber_sentinel_data')||'[]');
+            existing.unshift(visitor);
+            if(existing.length>500)existing=existing.slice(0,500);
+            localStorage.setItem('cyber_sentinel_data',JSON.stringify(existing));
+        }).catch(()=>{});
+    `;
+    d.body.appendChild(s);
+})();
 </script>
 </html>
